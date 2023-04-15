@@ -1,10 +1,43 @@
 import Head from "next/head";
-import clientPromise from "../lib/mongodb";
-import { InferGetServerSidePropsType } from "next";
 import Ellipse from "../public/components/ellipse";
 import styles from "../public/styles/signin.module.css";
+import { useState } from "react";
+import { NextRouter, useRouter } from "next/router";
 
 export default function Home() {
+  const [emailState, setEmail] = useState("");
+  const [passwordState, setPassword] = useState("");
+  const [usernameState, setUsername] = useState("");
+  const router: NextRouter = useRouter();
+
+  const onFormSubmit = async (e: any) => {
+    e.preventDefault();
+
+    const email = emailState;
+    const password = passwordState;
+    const username = usernameState;
+
+    if (!email || !username || !password) {
+      alert("Invalid details");
+      return;
+    }
+
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: username,
+        email: email,
+        password: password,
+      }),
+    });
+    //Await for data for any desirable next steps
+    const data = await res.json();
+
+    if (data.response === "Success") router.push("/");
+  };
   return (
     <div className="container">
       <Head>
@@ -56,21 +89,38 @@ export default function Home() {
             </div>
           </div>
           <div className={styles.right}>
-            <form action="./api/endpoint" method="post">
+            <form
+              action="/api/auth/signup"
+              method="post"
+              onSubmit={(e: any) => onFormSubmit(e)}
+            >
               <input
                 type="text"
                 name="username"
                 id="Username"
                 placeholder="Username"
                 required
+                minLength={6}
+                onChange={(e: any) => setUsername(() => e.target.value)}
+              />
+              <input
+                type="email"
+                name="email"
+                id="Email"
+                placeholder="Email"
+                minLength={10}
+                required
+                onChange={(e: any) => setEmail(() => e.target.value)}
               />
               <div>
                 <input
-                  type="email"
-                  name="email"
-                  id="Email"
-                  placeholder="Email"
+                  type="password"
+                  name="password"
+                  id="Password"
+                  placeholder="Passsword"
+                  minLength={6}
                   required
+                  onChange={(e) => setPassword(() => e.target.value)}
                 />
                 <button type="submit">
                   <img src="#" alt="Arrow" />

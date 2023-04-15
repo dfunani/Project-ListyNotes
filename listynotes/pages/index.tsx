@@ -1,24 +1,25 @@
 import Head from "next/head";
 import clientPromise from "../lib/mongodb";
 import { InferGetServerSidePropsType } from "next";
+import { Db } from "mongodb";
+const db_context = require("../types/helpers");
 
 export async function getServerSideProps(context) {
   try {
-    await clientPromise;
-    // `await clientPromise` will use the default database passed in the MONGODB_URI
-    // However you can use another database (e.g. myDatabase) by replacing the `await clientPromise` with the following code:
-    //
-    // `const client = await clientPromise`
-    // `const db = client.db("myDatabase")`
-    //
-    // Then you can execute queries against your database like so:
-    // db.find({}) or any of the MongoDB Node Driver commands
+    const db: Db = await db_context();
+    const users = await db
+      .collection("Users")
+      .find({})
+      .sort({ metacritic: -1 })
+      .toArray();
 
     return {
-      props: { isConnected: true },
+      props: {
+        isConnected: true,
+        users: JSON.stringify(users),
+      },
     };
   } catch (e) {
-    console.error(e);
     return {
       props: { isConnected: false },
     };
@@ -27,6 +28,7 @@ export async function getServerSideProps(context) {
 
 export default function Home({
   isConnected,
+  users,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <div className="container">
@@ -34,7 +36,7 @@ export default function Home({
         <title>ListyNotes - Home</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
+      {users}
       <main></main>
     </div>
   );
